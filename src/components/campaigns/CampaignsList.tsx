@@ -34,6 +34,8 @@ import {
   TabsList,
   TabsTrigger,
 } from '@/components/ui/tabs';
+import { useToast } from "@/hooks/use-toast";
+import CampaignForm from './CampaignForm';
 
 interface Campaign {
   id: string;
@@ -171,6 +173,9 @@ const CampaignsList: React.FC = () => {
   const [campaigns, setCampaigns] = useState<Campaign[]>(mockCampaigns);
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState('all');
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [currentCampaign, setCurrentCampaign] = useState<Campaign | undefined>(undefined);
+  const { toast } = useToast();
   
   const filteredCampaigns = campaigns.filter(campaign => {
     const matchesSearch = campaign.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -180,6 +185,83 @@ const CampaignsList: React.FC = () => {
     
     return matchesSearch && matchesFilter;
   });
+  
+  const handleCreateCampaign = () => {
+    setCurrentCampaign(undefined);
+    setIsFormOpen(true);
+  };
+  
+  const handleEditCampaign = (campaign: Campaign) => {
+    setCurrentCampaign(campaign);
+    setIsFormOpen(true);
+  };
+  
+  const handleDeleteCampaign = (id: string) => {
+    setCampaigns(prev => prev.filter(campaign => campaign.id !== id));
+    toast({
+      title: "Campagne supprimée",
+      description: "La campagne a été supprimée avec succès.",
+    });
+  };
+  
+  const handleToggleCampaignStatus = (campaign: Campaign) => {
+    const newStatus = campaign.status === 'active' ? 'paused' : 
+                     campaign.status === 'paused' ? 'active' : campaign.status;
+    
+    setCampaigns(prev => 
+      prev.map(c => 
+        c.id === campaign.id 
+          ? { ...c, status: newStatus }
+          : c
+      )
+    );
+    
+    toast({
+      title: newStatus === 'active' ? "Campagne activée" : "Campagne mise en pause",
+      description: `La campagne a été ${newStatus === 'active' ? 'activée' : 'mise en pause'} avec succès.`,
+    });
+  };
+  
+  const handleCampaignSubmit = (campaignData: Partial<Campaign>) => {
+    if (currentCampaign) {
+      // Edit existing campaign
+      setCampaigns(prev => 
+        prev.map(c => 
+          c.id === currentCampaign.id 
+            ? { ...c, ...campaignData } as Campaign
+            : c
+        )
+      );
+      
+      toast({
+        title: "Campagne mise à jour",
+        description: "Les modifications ont été enregistrées.",
+      });
+    } else {
+      // Create new campaign
+      const newCampaign = {
+        ...campaignData,
+        id: `campaign-${Date.now()}`,
+        contacts: 0,
+        progress: 0,
+        metrics: {
+          sent: 0,
+          opened: 0,
+          clicked: 0,
+          replied: 0
+        },
+        status: 'draft',
+        lastActivity: new Date().toISOString()
+      } as Campaign;
+      
+      setCampaigns(prev => [...prev, newCampaign]);
+      
+      toast({
+        title: "Campagne créée",
+        description: "La campagne a été créée avec succès.",
+      });
+    }
+  };
   
   return (
     <div className="space-y-4 animate-scale-in">
@@ -204,7 +286,7 @@ const CampaignsList: React.FC = () => {
             </TabsList>
           </Tabs>
           
-          <Button>
+          <Button onClick={handleCreateCampaign}>
             <Plus className="h-4 w-4 mr-2" />
             <span>Nouvelle campagne</span>
           </Button>
@@ -240,15 +322,25 @@ const CampaignsList: React.FC = () => {
                       <DropdownMenuItem className="cursor-pointer">
                         Voir
                       </DropdownMenuItem>
-                      <DropdownMenuItem className="cursor-pointer">
+                      <DropdownMenuItem 
+                        className="cursor-pointer"
+                        onClick={() => handleEditCampaign(campaign)}
+                      >
                         Modifier
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem className="cursor-pointer">
-                        {campaign.status === 'active' ? 'Mettre en pause' : 
-                         campaign.status === 'paused' ? 'Reprendre' : ''}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="cursor-pointer text-destructive">
+                      {(campaign.status === 'active' || campaign.status === 'paused') && (
+                        <DropdownMenuItem 
+                          className="cursor-pointer"
+                          onClick={() => handleToggleCampaignStatus(campaign)}
+                        >
+                          {campaign.status === 'active' ? 'Mettre en pause' : 'Reprendre'}
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuItem 
+                        className="cursor-pointer text-destructive"
+                        onClick={() => handleDeleteCampaign(campaign.id)}
+                      >
                         Supprimer
                       </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -345,12 +437,19 @@ const CampaignsList: React.FC = () => {
       {filteredCampaigns.length === 0 && (
         <div className="text-center py-12">
           <div className="text-muted-foreground mb-2">Aucune campagne trouvée</div>
-          <Button>
+          <Button onClick={handleCreateCampaign}>
             <Plus className="h-4 w-4 mr-2" />
             <span>Créer une campagne</span>
           </Button>
         </div>
       )}
+      
+      <CampaignForm 
+        open={isFormOpen} 
+        onOpenChange={setIsFormOpen} 
+        onSubmit={handleCampaignSubmit}
+        campaign={currentCampaign}
+      />
     </div>
   );
 };

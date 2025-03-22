@@ -11,6 +11,7 @@ import Contacts from "./pages/Contacts";
 import Pipeline from "./pages/Pipeline";
 import Campaigns from "./pages/Campaigns";
 import Settings from "./pages/Settings";
+import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 import Navbar from "./components/layout/Navbar";
 import Sidebar from "./components/layout/Sidebar";
@@ -88,6 +89,14 @@ const App = () => (
             element={
               <AppLayout>
                 <Settings />
+              </AppLayout>
+            } 
+          />
+          <Route 
+            path="/admin" 
+            element={
+              <AppLayout>
+                <Admin />
               </AppLayout>
             } 
           />

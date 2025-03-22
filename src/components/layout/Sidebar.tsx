@@ -10,7 +10,8 @@ import {
   PieChart, 
   Settings,
   ChevronRight,
-  PanelLeft
+  PanelLeft,
+  Shield
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -170,6 +171,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
             icon={<Settings className="h-5 w-5" />} 
             label="Paramètres" 
             path="/settings" 
+            isCollapsed={isCollapsed} 
+          />
+          <SidebarItem 
+            icon={<Shield className="h-5 w-5" />} 
+            label="Administration" 
+            path="/admin" 
             isCollapsed={isCollapsed} 
           />
         </nav>

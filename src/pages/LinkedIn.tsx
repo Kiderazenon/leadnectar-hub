@@ -505,7 +505,7 @@ const LinkedIn: React.FC = () => {
               {isNewTemplate ? 'Créer un nouveau modèle' : 'Modifier le modèle'}
             </DialogTitle>
             <DialogDescription>
-              Personnalisez votre modèle de message LinkedIn. Utilisez {{variable}} pour les variables dynamiques.
+              Personnalisez votre modèle de message LinkedIn. Utilisez {'{{variable}}'} pour les variables dynamiques.
             </DialogDescription>
           </DialogHeader>
           
@@ -553,7 +553,7 @@ const LinkedIn: React.FC = () => {
                   content: (currentTemplate?.content || '') + '{{first_name}}'
                 })}
               >
-                {{first_name}}
+                {"{{first_name}}"}
               </Badge>
               <Badge variant="outline" className="cursor-pointer"
                 onClick={() => setCurrentTemplate({
@@ -561,7 +561,7 @@ const LinkedIn: React.FC = () => {
                   content: (currentTemplate?.content || '') + '{{last_name}}'
                 })}
               >
-                {{last_name}}
+                {"{{last_name}}"}
               </Badge>
               <Badge variant="outline" className="cursor-pointer"
                 onClick={() => setCurrentTemplate({
@@ -569,7 +569,7 @@ const LinkedIn: React.FC = () => {
                   content: (currentTemplate?.content || '') + '{{company}}'
                 })}
               >
-                {{company}}
+                {"{{company}}"}
               </Badge>
               <Badge variant="outline" className="cursor-pointer"
                 onClick={() => setCurrentTemplate({
@@ -577,7 +577,7 @@ const LinkedIn: React.FC = () => {
                   content: (currentTemplate?.content || '') + '{{position}}'
                 })}
               >
-                {{position}}
+                {"{{position}}"}
               </Badge>
               <Badge variant="outline" className="cursor-pointer"
                 onClick={() => setCurrentTemplate({
@@ -585,7 +585,7 @@ const LinkedIn: React.FC = () => {
                   content: (currentTemplate?.content || '') + '{{topic}}'
                 })}
               >
-                {{topic}}
+                {"{{topic}}"}
               </Badge>
             </div>
           </div>

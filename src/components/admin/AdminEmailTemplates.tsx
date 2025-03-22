@@ -282,7 +282,7 @@ const AdminEmailTemplates: React.FC = () => {
               {isNewTemplate ? 'Créer un nouveau modèle' : 'Modifier le modèle'}
             </DialogTitle>
             <DialogDescription>
-              Personnalisez le modèle selon vos besoins. Utilisez les variables entre doubles accolades {{variable}}.
+              Personnalisez le modèle selon vos besoins. Utilisez les variables entre doubles accolades {"{{variable}}"}.
             </DialogDescription>
           </DialogHeader>
           

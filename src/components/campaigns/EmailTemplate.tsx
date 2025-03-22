@@ -90,6 +90,31 @@ const EmailTemplate: React.FC<EmailTemplateProps> = ({
   const formatVariable = (text: string) => {
     return text.replace(/\{\{([^}]+)\}\}/g, '<span class="text-primary font-medium">{{$1}}</span>');
   };
+
+  const handleInsertVariable = (variable: string) => {
+    if (!isEditing) return;
+    
+    // Insert the variable at cursor position or at the end
+    const textarea = document.querySelector('textarea[name="body"]') as HTMLTextAreaElement;
+    if (textarea) {
+      const start = textarea.selectionStart || 0;
+      const end = textarea.selectionEnd || 0;
+      const text = textarea.value;
+      const newText = text.substring(0, start) + variable + text.substring(end);
+      
+      setCurrentTemplate(prev => ({
+        ...prev,
+        body: newText,
+        updatedAt: new Date().toISOString()
+      }));
+      
+      // Focus the textarea and set cursor position after the inserted variable
+      setTimeout(() => {
+        textarea.focus();
+        textarea.setSelectionRange(start + variable.length, start + variable.length);
+      }, 0);
+    }
+  };
   
   return (
     <Card className={cn("glass-card border border-border/50 animate-scale-in", className)}>
@@ -199,20 +224,20 @@ const EmailTemplate: React.FC<EmailTemplateProps> = ({
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="glass">
-                        <DropdownMenuItem className="cursor-pointer">
-                          {{prenom}}
+                        <DropdownMenuItem onClick={() => handleInsertVariable("{{prenom}}")}>
+                          {"{{prenom}}"}
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="cursor-pointer">
-                          {{nom}}
+                        <DropdownMenuItem onClick={() => handleInsertVariable("{{nom}}")}>
+                          {"{{nom}}"}
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="cursor-pointer">
-                          {{entreprise}}
+                        <DropdownMenuItem onClick={() => handleInsertVariable("{{entreprise}}")}>
+                          {"{{entreprise}}"}
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="cursor-pointer">
-                          {{poste}}
+                        <DropdownMenuItem onClick={() => handleInsertVariable("{{poste}}")}>
+                          {"{{poste}}"}
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="cursor-pointer">
-                          {{signature}}
+                        <DropdownMenuItem onClick={() => handleInsertVariable("{{signature}}")}>
+                          {"{{signature}}"}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>

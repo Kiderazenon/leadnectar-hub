@@ -180,6 +180,31 @@ const AdminEmailTemplates: React.FC = () => {
     setIsDialogOpen(false);
   };
   
+  // Fonction pour insérer une variable dans l'éditeur de contenu
+  const handleInsertVariable = (variableName: string) => {
+    const textArea = document.getElementById('template-content') as HTMLTextAreaElement;
+    if (textArea) {
+      const start = textArea.selectionStart;
+      const end = textArea.selectionEnd;
+      const currentContent = textArea.value;
+      const newContent = 
+        currentContent.substring(0, start) + 
+        `{{${variableName}}}` + 
+        currentContent.substring(end);
+      
+      setTemplateContent(newContent);
+      
+      // Remettre le focus sur le textarea et placer le curseur après la variable insérée
+      setTimeout(() => {
+        textArea.focus();
+        textArea.setSelectionRange(
+          start + variableName.length + 4,
+          start + variableName.length + 4
+        );
+      }, 0);
+    }
+  };
+  
   return (
     <>
       <Card className="glass-card border border-border/50">
@@ -308,13 +333,43 @@ const AdminEmailTemplates: React.FC = () => {
                 </div>
               </div>
               <div className="col-span-2">
-                <div className="flex items-center space-x-2 text-sm">
+                <div className="flex items-center flex-wrap gap-2 text-sm">
                   <span className="font-medium">Variables disponibles:</span>
-                  <Badge variant="outline">{{first_name}}</Badge>
-                  <Badge variant="outline">{{last_name}}</Badge>
-                  <Badge variant="outline">{{company}}</Badge>
-                  <Badge variant="outline">{{action_url}}</Badge>
-                  <Badge variant="outline">{{unsubscribe_link}}</Badge>
+                  <Badge 
+                    variant="outline" 
+                    className="cursor-pointer hover:bg-primary/10" 
+                    onClick={() => handleInsertVariable("first_name")}
+                  >
+                    {"{{first_name}}"}
+                  </Badge>
+                  <Badge 
+                    variant="outline" 
+                    className="cursor-pointer hover:bg-primary/10" 
+                    onClick={() => handleInsertVariable("last_name")}
+                  >
+                    {"{{last_name}}"}
+                  </Badge>
+                  <Badge 
+                    variant="outline" 
+                    className="cursor-pointer hover:bg-primary/10" 
+                    onClick={() => handleInsertVariable("company")}
+                  >
+                    {"{{company}}"}
+                  </Badge>
+                  <Badge 
+                    variant="outline" 
+                    className="cursor-pointer hover:bg-primary/10" 
+                    onClick={() => handleInsertVariable("action_url")}
+                  >
+                    {"{{action_url}}"}
+                  </Badge>
+                  <Badge 
+                    variant="outline" 
+                    className="cursor-pointer hover:bg-primary/10" 
+                    onClick={() => handleInsertVariable("unsubscribe_link")}
+                  >
+                    {"{{unsubscribe_link}}"}
+                  </Badge>
                 </div>
               </div>
             </div>

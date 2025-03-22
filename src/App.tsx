@@ -12,6 +12,7 @@ import Pipeline from "./pages/Pipeline";
 import Campaigns from "./pages/Campaigns";
 import Settings from "./pages/Settings";
 import Admin from "./pages/Admin";
+import LinkedIn from "./pages/LinkedIn";
 import NotFound from "./pages/NotFound";
 import Navbar from "./components/layout/Navbar";
 import Sidebar from "./components/layout/Sidebar";
@@ -104,15 +105,7 @@ const App = () => (
             path="/linkedin" 
             element={
               <AppLayout>
-                <div className="p-6 max-w-7xl mx-auto animate-fade-in">
-                  <h1 className="text-3xl font-semibold mb-6">LinkedIn</h1>
-                  <div className="glass-card p-12 text-center">
-                    <h2 className="text-2xl font-medium mb-4">Fonctionnalité en développement</h2>
-                    <p className="text-muted-foreground">
-                      L'intégration avec LinkedIn sera disponible prochainement.
-                    </p>
-                  </div>
-                </div>
+                <LinkedIn />
               </AppLayout>
             } 
           />

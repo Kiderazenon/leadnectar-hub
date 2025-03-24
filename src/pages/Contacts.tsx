@@ -4,25 +4,12 @@ import ContactsList from '@/components/contacts/ContactsList';
 import ContactCard from '@/components/contacts/ContactCard';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Grid3X3, List } from 'lucide-react';
-
-const mockContact = {
-  id: '1',
-  name: 'Emma Dupont',
-  email: 'emma.dupont@example.com',
-  phone: '+33 6 12 34 56 78',
-  company: 'Tech Solutions',
-  position: 'Marketing Director',
-  location: 'Paris, France',
-  website: 'https://techsolutions.com',
-  linkedIn: 'https://linkedin.com/in/emmadupont',
-  status: 'Qualified' as const,
-  tags: ['Marketing', 'Tech', 'Decision Maker'],
-  notes: "Emma a montré un intérêt pour notre solution de marketing automation. Elle est particulièrement intéressée par les fonctionnalités d'analyse de données et de segmentation client."
-};
+import { Grid3X3, List, UserPlus } from 'lucide-react';
+import AddContactDialog from '@/components/contacts/AddContactDialog';
 
 const Contacts: React.FC = () => {
   const [view, setView] = useState<'list' | 'grid'>('list');
+  const [activeTab, setActiveTab] = useState('all');
   
   return (
     <div className="p-6 max-w-7xl mx-auto animate-fade-in">
@@ -48,10 +35,24 @@ const Contacts: React.FC = () => {
               <Grid3X3 className="h-4 w-4" />
             </Button>
           </div>
+          
+          <AddContactDialog 
+            trigger={
+              <Button>
+                <UserPlus className="h-4 w-4 mr-2" />
+                <span>Ajouter un contact</span>
+              </Button>
+            }
+          />
         </div>
       </div>
       
-      <Tabs defaultValue="all" className="mb-6">
+      <Tabs 
+        defaultValue="all" 
+        className="mb-6"
+        value={activeTab}
+        onValueChange={(value) => setActiveTab(value)}
+      >
         <TabsList>
           <TabsTrigger value="all">Tous</TabsTrigger>
           <TabsTrigger value="leads">Leads</TabsTrigger>
@@ -64,54 +65,17 @@ const Contacts: React.FC = () => {
         <ContactsList />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <ContactCard contact={mockContact} />
-          
-          <ContactCard contact={{
-            ...mockContact,
-            id: '2',
-            name: 'Laurent Martin',
-            email: 'laurent.martin@example.com',
-            phone: '+33 6 23 45 67 89',
-            company: 'Global Innovations',
-            position: 'CEO',
-            status: 'Lead'
-          }} />
-          
-          <ContactCard contact={{
-            ...mockContact,
-            id: '3',
-            name: 'Sophie Bernard',
-            email: 'sophie.bernard@example.com',
-            phone: '+33 6 34 56 78 90',
-            company: 'Creative Design',
-            position: 'Art Director',
-            status: 'Customer',
-            tags: ['Design', 'Creative']
-          }} />
-          
-          <ContactCard contact={{
-            ...mockContact,
-            id: '4',
-            name: 'Alexandre Petit',
-            email: 'alexandre.petit@example.com',
-            phone: '+33 6 45 67 89 01',
-            company: 'Data Analytics',
-            position: 'Data Scientist',
-            status: 'Lead',
-            tags: ['Tech', 'Analytics']
-          }} />
-          
-          <ContactCard contact={{
-            ...mockContact,
-            id: '5',
-            name: 'Camille Dubois',
-            email: 'camille.dubois@example.com',
-            phone: '+33 6 56 78 90 12',
-            company: 'Eco Solutions',
-            position: 'Sustainability Officer',
-            status: 'Churned',
-            tags: ['Green Tech', 'Sustainability']
-          }} />
+          <AddContactDialog 
+            trigger={
+              <Button 
+                variant="outline" 
+                className="h-full min-h-[250px] flex flex-col items-center justify-center border-dashed"
+              >
+                <UserPlus className="h-10 w-10 mb-4 text-muted-foreground" />
+                <span className="text-muted-foreground">Ajouter un contact</span>
+              </Button>
+            }
+          />
         </div>
       )}
     </div>

@@ -9,6 +9,273 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      activities: {
+        Row: {
+          company_id: string | null
+          contact_id: string | null
+          created_at: string | null
+          date: string | null
+          description: string | null
+          id: string
+          status: string | null
+          team_id: string | null
+          title: string
+          type: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          company_id?: string | null
+          contact_id?: string | null
+          created_at?: string | null
+          date?: string | null
+          description?: string | null
+          id?: string
+          status?: string | null
+          team_id?: string | null
+          title: string
+          type: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          company_id?: string | null
+          contact_id?: string | null
+          created_at?: string | null
+          date?: string | null
+          description?: string | null
+          id?: string
+          status?: string | null
+          team_id?: string | null
+          title?: string
+          type?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activities_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activities_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      companies: {
+        Row: {
+          account_owner: string | null
+          address: string | null
+          annual_revenue: number | null
+          city: string | null
+          country: string | null
+          created_at: string | null
+          custom_fields: Json | null
+          description: string | null
+          email: string | null
+          employee_count: number | null
+          facebook: string | null
+          founding_year: number | null
+          id: string
+          industry: string | null
+          instagram: string | null
+          legal_id: string | null
+          legal_status: string | null
+          linkedin: string | null
+          logo_url: string | null
+          name: string
+          notes: string | null
+          other_social: Json | null
+          phone: string | null
+          postal_code: string | null
+          relationship_type: string | null
+          source: string | null
+          state: string | null
+          team_id: string | null
+          twitter: string | null
+          updated_at: string | null
+          user_id: string
+          website: string | null
+        }
+        Insert: {
+          account_owner?: string | null
+          address?: string | null
+          annual_revenue?: number | null
+          city?: string | null
+          country?: string | null
+          created_at?: string | null
+          custom_fields?: Json | null
+          description?: string | null
+          email?: string | null
+          employee_count?: number | null
+          facebook?: string | null
+          founding_year?: number | null
+          id?: string
+          industry?: string | null
+          instagram?: string | null
+          legal_id?: string | null
+          legal_status?: string | null
+          linkedin?: string | null
+          logo_url?: string | null
+          name: string
+          notes?: string | null
+          other_social?: Json | null
+          phone?: string | null
+          postal_code?: string | null
+          relationship_type?: string | null
+          source?: string | null
+          state?: string | null
+          team_id?: string | null
+          twitter?: string | null
+          updated_at?: string | null
+          user_id: string
+          website?: string | null
+        }
+        Update: {
+          account_owner?: string | null
+          address?: string | null
+          annual_revenue?: number | null
+          city?: string | null
+          country?: string | null
+          created_at?: string | null
+          custom_fields?: Json | null
+          description?: string | null
+          email?: string | null
+          employee_count?: number | null
+          facebook?: string | null
+          founding_year?: number | null
+          id?: string
+          industry?: string | null
+          instagram?: string | null
+          legal_id?: string | null
+          legal_status?: string | null
+          linkedin?: string | null
+          logo_url?: string | null
+          name?: string
+          notes?: string | null
+          other_social?: Json | null
+          phone?: string | null
+          postal_code?: string | null
+          relationship_type?: string | null
+          source?: string | null
+          state?: string | null
+          team_id?: string | null
+          twitter?: string | null
+          updated_at?: string | null
+          user_id?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
+      contacts: {
+        Row: {
+          address: string | null
+          address_complement: string | null
+          birth_date: string | null
+          city: string | null
+          company_name: string | null
+          contact_owner: string | null
+          country: string | null
+          created_at: string | null
+          custom_fields: Json | null
+          email: string | null
+          facebook: string | null
+          first_name: string | null
+          gender: string | null
+          id: string
+          instagram: string | null
+          job_title: string | null
+          last_name: string | null
+          linkedin: string | null
+          mobile_phone: string | null
+          notes: string | null
+          other_social: string | null
+          phone: string | null
+          postal_code: string | null
+          source: string | null
+          state: string | null
+          status: string | null
+          team_id: string | null
+          twitter: string | null
+          updated_at: string | null
+          user_id: string
+          website: string | null
+        }
+        Insert: {
+          address?: string | null
+          address_complement?: string | null
+          birth_date?: string | null
+          city?: string | null
+          company_name?: string | null
+          contact_owner?: string | null
+          country?: string | null
+          created_at?: string | null
+          custom_fields?: Json | null
+          email?: string | null
+          facebook?: string | null
+          first_name?: string | null
+          gender?: string | null
+          id?: string
+          instagram?: string | null
+          job_title?: string | null
+          last_name?: string | null
+          linkedin?: string | null
+          mobile_phone?: string | null
+          notes?: string | null
+          other_social?: string | null
+          phone?: string | null
+          postal_code?: string | null
+          source?: string | null
+          state?: string | null
+          status?: string | null
+          team_id?: string | null
+          twitter?: string | null
+          updated_at?: string | null
+          user_id: string
+          website?: string | null
+        }
+        Update: {
+          address?: string | null
+          address_complement?: string | null
+          birth_date?: string | null
+          city?: string | null
+          company_name?: string | null
+          contact_owner?: string | null
+          country?: string | null
+          created_at?: string | null
+          custom_fields?: Json | null
+          email?: string | null
+          facebook?: string | null
+          first_name?: string | null
+          gender?: string | null
+          id?: string
+          instagram?: string | null
+          job_title?: string | null
+          last_name?: string | null
+          linkedin?: string | null
+          mobile_phone?: string | null
+          notes?: string | null
+          other_social?: string | null
+          phone?: string | null
+          postal_code?: string | null
+          source?: string | null
+          state?: string | null
+          status?: string | null
+          team_id?: string | null
+          twitter?: string | null
+          updated_at?: string | null
+          user_id?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -35,6 +302,65 @@ export type Database = {
           id?: string
           lastname?: string | null
           role?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      team_members: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: string | null
+          team_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role?: string | null
+          team_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: string | null
+          team_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_members_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teams: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+          owner_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+          owner_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          owner_id?: string
           updated_at?: string | null
         }
         Relationships: []

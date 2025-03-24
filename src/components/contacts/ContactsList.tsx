@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Search, 
   Filter, 
@@ -9,7 +9,11 @@ import {
   MoreHorizontal, 
   Mail,
   Linkedin,
-  Phone
+  Phone,
+  Eye,
+  Edit,
+  Trash2,
+  Loader2
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -32,94 +36,53 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-
-interface Contact {
-  id: string;
-  name: string;
-  email: string;
-  company: string;
-  position: string;
-  phone: string;
-  status: 'Lead' | 'Qualified' | 'Customer' | 'Churned';
-  linkedIn?: string;
-  tags: string[];
-  lastActivity: string;
-}
-
-const mockContacts: Contact[] = [
-  {
-    id: '1',
-    name: 'Emma Dupont',
-    email: 'emma.dupont@example.com',
-    company: 'Tech Solutions',
-    position: 'Marketing Director',
-    phone: '+33 6 12 34 56 78',
-    status: 'Qualified',
-    linkedIn: 'linkedin.com/in/emmadupont',
-    tags: ['Marketing', 'Tech'],
-    lastActivity: '2023-11-01'
-  },
-  {
-    id: '2',
-    name: 'Laurent Martin',
-    email: 'laurent.martin@example.com',
-    company: 'Global Innovations',
-    position: 'CEO',
-    phone: '+33 6 23 45 67 89',
-    status: 'Lead',
-    linkedIn: 'linkedin.com/in/laurentmartin',
-    tags: ['Decision Maker', 'Finance'],
-    lastActivity: '2023-11-05'
-  },
-  {
-    id: '3',
-    name: 'Sophie Bernard',
-    email: 'sophie.bernard@example.com',
-    company: 'Creative Design',
-    position: 'Art Director',
-    phone: '+33 6 34 56 78 90',
-    status: 'Customer',
-    linkedIn: 'linkedin.com/in/sophiebernard',
-    tags: ['Design', 'Creative'],
-    lastActivity: '2023-11-10'
-  },
-  {
-    id: '4',
-    name: 'Alexandre Petit',
-    email: 'alexandre.petit@example.com',
-    company: 'Data Analytics',
-    position: 'Data Scientist',
-    phone: '+33 6 45 67 89 01',
-    status: 'Lead',
-    linkedIn: 'linkedin.com/in/alexandrepetit',
-    tags: ['Tech', 'Analytics'],
-    lastActivity: '2023-11-12'
-  },
-  {
-    id: '5',
-    name: 'Camille Dubois',
-    email: 'camille.dubois@example.com',
-    company: 'Eco Solutions',
-    position: 'Sustainability Officer',
-    phone: '+33 6 56 78 90 12',
-    status: 'Churned',
-    linkedIn: 'linkedin.com/in/camilledubois',
-    tags: ['Green Tech', 'Sustainability'],
-    lastActivity: '2023-11-15'
-  }
-];
+import { supabase } from '@/integrations/supabase/client';
+import { Contact } from '@/types/contact';
+import AddContactDialog from './AddContactDialog';
+import { toast } from 'sonner';
 
 const statusColors = {
-  Lead: 'bg-blue-500/10 text-blue-600',
-  Qualified: 'bg-amber-500/10 text-amber-600',
-  Customer: 'bg-green-500/10 text-green-600',
-  Churned: 'bg-red-500/10 text-red-600'
+  lead: 'bg-blue-500/10 text-blue-600',
+  qualified: 'bg-amber-500/10 text-amber-600',
+  customer: 'bg-green-500/10 text-green-600',
+  churned: 'bg-red-500/10 text-red-600'
 };
 
 const ContactsList: React.FC = () => {
-  const [contacts, setContacts] = useState<Contact[]>(mockContacts);
+  const [contacts, setContacts] = useState<Contact[]>([]);
   const [selectedContacts, setSelectedContacts] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState('all');
+  
+  useEffect(() => {
+    fetchContacts();
+  }, []);
+  
+  const fetchContacts = async () => {
+    try {
+      setLoading(true);
+      
+      let query = supabase
+        .from('contacts')
+        .select('*');
+        
+      if (statusFilter !== 'all') {
+        query = query.eq('status', statusFilter);
+      }
+      
+      const { data, error } = await query.order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      setContacts(data as Contact[]);
+    } catch (error: any) {
+      console.error('Erreur lors du chargement des contacts:', error);
+      toast.error('Erreur lors du chargement des contacts');
+    } finally {
+      setLoading(false);
+    }
+  };
   
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -137,10 +100,40 @@ const ContactsList: React.FC = () => {
     }
   };
   
+  const handleStatusFilterChange = (value: string) => {
+    setStatusFilter(value);
+    setTimeout(() => {
+      fetchContacts();
+    }, 100);
+  };
+  
+  const deleteContact = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('contacts')
+        .delete()
+        .eq('id', id);
+        
+      if (error) throw error;
+      
+      setContacts(prev => prev.filter(contact => contact.id !== id));
+      setSelectedContacts(prev => prev.filter(contactId => contactId !== id));
+      toast.success('Contact supprimé avec succès');
+    } catch (error: any) {
+      console.error('Erreur lors de la suppression du contact:', error);
+      toast.error('Erreur lors de la suppression du contact');
+    }
+  };
+  
+  const handleAddContact = () => {
+    fetchContacts();
+  };
+  
   const filteredContacts = contacts.filter(contact => 
-    contact.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    contact.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    contact.company.toLowerCase().includes(searchTerm.toLowerCase())
+    (contact.first_name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+    (contact.last_name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+    (contact.email?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+    (contact.company_name?.toLowerCase() || '').includes(searchTerm.toLowerCase())
   );
   
   return (
@@ -164,12 +157,12 @@ const ContactsList: React.FC = () => {
                 <Filter className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="glass w-56">
+            <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>Filtrer par</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <div className="px-2 py-1.5">
                 <p className="text-sm font-medium mb-1.5">Status</p>
-                <Select>
+                <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Tous" />
                   </SelectTrigger>
@@ -182,23 +175,9 @@ const ContactsList: React.FC = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="px-2 py-1.5">
-                <p className="text-sm font-medium mb-1.5">Tags</p>
-                <Select>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Tous" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Tous</SelectItem>
-                    <SelectItem value="tech">Tech</SelectItem>
-                    <SelectItem value="marketing">Marketing</SelectItem>
-                    <SelectItem value="finance">Finance</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
               <DropdownMenuSeparator />
               <div className="px-2 py-1.5">
-                <Button className="w-full">Appliquer</Button>
+                <Button className="w-full" onClick={fetchContacts}>Appliquer</Button>
               </div>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -210,7 +189,7 @@ const ContactsList: React.FC = () => {
                 <span>Exporter</span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="glass w-40">
+            <DropdownMenuContent align="end" className="w-40">
               <DropdownMenuItem className="cursor-pointer">
                 <span>Excel (.xlsx)</span>
               </DropdownMenuItem>
@@ -225,10 +204,15 @@ const ContactsList: React.FC = () => {
             <span>Importer</span>
           </Button>
           
-          <Button>
-            <UserPlus className="h-4 w-4 mr-2" />
-            <span>Ajouter</span>
-          </Button>
+          <AddContactDialog 
+            trigger={
+              <Button>
+                <UserPlus className="h-4 w-4 mr-2" />
+                <span>Ajouter</span>
+              </Button>
+            }
+            onSuccess={handleAddContact}
+          />
         </div>
       </div>
       
@@ -239,22 +223,30 @@ const ContactsList: React.FC = () => {
               <tr className="bg-muted/50 border-b border-border">
                 <th className="px-4 py-3 text-left">
                   <Checkbox 
-                    checked={selectedContacts.length === contacts.length}
+                    checked={selectedContacts.length === contacts.length && contacts.length > 0}
                     onCheckedChange={(checked) => handleSelectAll(checked as boolean)}
                   />
                 </th>
                 <th className="px-4 py-3 text-left font-medium text-sm">Nom</th>
                 <th className="px-4 py-3 text-left font-medium text-sm">Entreprise</th>
                 <th className="px-4 py-3 text-left font-medium text-sm">Status</th>
-                <th className="px-4 py-3 text-left font-medium text-sm">Tags</th>
-                <th className="px-4 py-3 text-left font-medium text-sm">Dernière activité</th>
+                <th className="px-4 py-3 text-left font-medium text-sm">Coordonnées</th>
                 <th className="px-4 py-3 text-center font-medium text-sm">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {filteredContacts.length === 0 ? (
+              {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
+                  <td colSpan={6} className="px-4 py-8 text-center">
+                    <div className="flex justify-center items-center">
+                      <Loader2 className="h-6 w-6 animate-spin text-primary mr-2" />
+                      <span>Chargement des contacts...</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : filteredContacts.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
                     Aucun contact trouvé
                   </td>
                 </tr>
@@ -273,21 +265,21 @@ const ContactsList: React.FC = () => {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         <Avatar className="h-8 w-8">
-                          <AvatarImage src="" alt={contact.name} />
+                          <AvatarImage src="" alt={`${contact.first_name} ${contact.last_name}`} />
                           <AvatarFallback className="text-xs font-medium">
-                            {contact.name.split(' ').map(n => n[0]).join('')}
+                            {`${contact.first_name?.[0] || ''}${contact.last_name?.[0] || ''}`}
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <div className="font-medium">{contact.name}</div>
+                          <div className="font-medium">{`${contact.first_name} ${contact.last_name}`}</div>
                           <div className="text-sm text-muted-foreground">{contact.email}</div>
                         </div>
                       </div>
                     </td>
                     <td className="px-4 py-3">
                       <div>
-                        <div className="font-medium">{contact.company}</div>
-                        <div className="text-sm text-muted-foreground">{contact.position}</div>
+                        <div className="font-medium">{contact.company_name || '-'}</div>
+                        <div className="text-sm text-muted-foreground">{contact.job_title || '-'}</div>
                       </div>
                     </td>
                     <td className="px-4 py-3">
@@ -295,25 +287,32 @@ const ContactsList: React.FC = () => {
                         "rounded-full font-normal",
                         statusColors[contact.status]
                       )}>
-                        {contact.status}
+                        {contact.status === 'lead' ? 'Lead' : 
+                         contact.status === 'qualified' ? 'Qualifié' : 
+                         contact.status === 'customer' ? 'Client' : 
+                         'Perdu'}
                       </Badge>
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex flex-wrap gap-1">
-                        {contact.tags.map((tag, index) => (
-                          <Badge key={index} variant="secondary" className="rounded-full font-normal text-xs">
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="text-sm">
-                        {new Date(contact.lastActivity).toLocaleDateString('fr-FR', {
-                          day: 'numeric',
-                          month: 'short',
-                          year: 'numeric'
-                        })}
+                      <div className="space-y-1">
+                        {contact.email && (
+                          <div className="text-sm flex items-center">
+                            <Mail className="h-3 w-3 inline mr-1.5 text-muted-foreground" />
+                            <span>{contact.email}</span>
+                          </div>
+                        )}
+                        {contact.phone && (
+                          <div className="text-sm flex items-center">
+                            <Phone className="h-3 w-3 inline mr-1.5 text-muted-foreground" />
+                            <span>{contact.phone}</span>
+                          </div>
+                        )}
+                        {contact.mobile_phone && (
+                          <div className="text-sm flex items-center">
+                            <Phone className="h-3 w-3 inline mr-1.5 text-muted-foreground" />
+                            <span>{contact.mobile_phone}</span>
+                          </div>
+                        )}
                       </div>
                     </td>
                     <td className="px-4 py-3">
@@ -333,16 +332,22 @@ const ContactsList: React.FC = () => {
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="glass w-40">
-                            <DropdownMenuItem className="cursor-pointer">
-                              Voir
+                          <DropdownMenuContent align="end" className="w-40">
+                            <DropdownMenuItem className="cursor-pointer flex items-center">
+                              <Eye className="h-4 w-4 mr-2" />
+                              <span>Voir</span>
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="cursor-pointer">
-                              Modifier
+                            <DropdownMenuItem className="cursor-pointer flex items-center">
+                              <Edit className="h-4 w-4 mr-2" />
+                              <span>Modifier</span>
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem className="cursor-pointer text-destructive">
-                              Supprimer
+                            <DropdownMenuItem 
+                              className="cursor-pointer text-destructive flex items-center"
+                              onClick={() => deleteContact(contact.id)}
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              <span>Supprimer</span>
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>

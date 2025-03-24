@@ -1,11 +1,10 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Trash, Edit, ChevronRight, ChevronDown, Settings, Mail, Calendar, Clock, ArrowRight, Play, Pause, Save, Sparkles } from 'lucide-react';
+import { Plus, Trash, Edit, ChevronRight, ChevronDown, Settings, Mail, Calendar, Clock, ArrowRight, Play, Pause, Save, Sparkles, Copy as CopyIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { 
   Dialog, 
@@ -401,13 +400,17 @@ const EmailSequenceBuilder: React.FC<EmailSequenceBuilderProps> = ({ className }
     if (field.includes('.')) {
       // Handle nested fields like delay.value
       const [parentField, childField] = field.split('.');
-      setCurrentStep({
-        ...currentStep,
-        [parentField]: {
-          ...currentStep[parentField as keyof SequenceStep],
-          [childField]: value
-        }
-      });
+      const parentValue = currentStep[parentField as keyof SequenceStep];
+      
+      if (parentValue && typeof parentValue === 'object') {
+        setCurrentStep({
+          ...currentStep,
+          [parentField]: {
+            ...parentValue,
+            [childField]: value
+          }
+        });
+      }
     } else {
       setCurrentStep({
         ...currentStep,
@@ -862,288 +865,4 @@ const EmailSequenceBuilder: React.FC<EmailSequenceBuilderProps> = ({ className }
                     
                     <div className="space-y-6">
                       {selectedSequence.steps.map((step, index) => (
-                        <div key={step.id} className="flex">
-                          <div className="flex flex-col items-center mr-4">
-                            <div className={cn(
-                              "w-8 h-8 rounded-full flex items-center justify-center text-white",
-                              step.type === 'email' ? "bg-primary" : 
-                              step.type === 'delay' ? "bg-orange-500" :
-                              "bg-purple-500"
-                            )}>
-                              {index + 1}
-                            </div>
-                            {index < selectedSequence.steps.length - 1 && (
-                              <div className="w-px h-full bg-border my-2"></div>
-                            )}
-                          </div>
-                          
-                          <div className="flex-1">
-                            <div className={cn(
-                              "border border-border/50 rounded-md p-4 bg-background mb-2",
-                              step.type === 'email' ? "border-l-4 border-l-primary" : 
-                              step.type === 'delay' ? "border-l-4 border-l-orange-500" :
-                              "border-l-4 border-l-purple-500"
-                            )}>
-                              <div className="flex items-center mb-2">
-                                <div className={cn(
-                                  "w-6 h-6 rounded-full flex items-center justify-center mr-2 text-white",
-                                  step.type === 'email' ? "bg-primary" : 
-                                  step.type === 'delay' ? "bg-orange-500" :
-                                  "bg-purple-500"
-                                )}>
-                                  {getStepIcon(step.type)}
-                                </div>
-                                <h4 className="font-medium">{step.name}</h4>
-                              </div>
-                              
-                              {step.type === 'email' && (
-                                <div className="pl-8">
-                                  <p className="text-sm mb-1">
-                                    <span className="font-medium">Objet:</span> {
-                                      step.templateId ? 
-                                      availableTemplates.find(t => t.id === step.templateId)?.subject || 'Sujet non défini' : 
-                                      'Aucun template sélectionné'
-                                    }
-                                  </p>
-                                  <p className="text-sm text-muted-foreground truncate">
-                                    {
-                                      step.templateId ? 
-                                      availableTemplates.find(t => t.id === step.templateId)?.body?.substring(0, 100) + '...' || 'Contenu non défini' : 
-                                      'Aucun template sélectionné'
-                                    }
-                                  </p>
-                                </div>
-                              )}
-                              
-                              {step.type === 'delay' && (
-                                <div className="pl-8">
-                                  <p className="text-sm text-muted-foreground">
-                                    Attendre {formatDelayText(step.delay)} avant de continuer
-                                  </p>
-                                </div>
-                              )}
-                              
-                              {step.type === 'condition' && (
-                                <div className="pl-8">
-                                  <p className="text-sm text-muted-foreground">
-                                    Si {formatConditionText(step.condition)}, 
-                                    {step.condition?.targetStepId ? 
-                                      ` aller à l'étape ${selectedSequence.steps.findIndex(s => s.id === step.condition?.targetStepId) + 1}` : 
-                                      ' continuer la séquence'}
-                                  </p>
-                                </div>
-                              )}
-                            </div>
-                            
-                            {index < selectedSequence.steps.length - 1 && step.type === 'delay' && (
-                              <div className="ml-8 text-xs text-muted-foreground mb-4">
-                                <Clock className="h-3 w-3 inline mr-1" />
-                                {formatDelayText(step.delay)}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-            
-            <CardFooter className="border-t border-border pt-4">
-              <div className="flex justify-between w-full">
-                <Button variant="outline" onClick={() => handleDuplicateSequence(selectedSequence)}>
-                  <Copy className="h-4 w-4 mr-2" />
-                  Dupliquer
-                </Button>
-                
-                <Button variant="outline" className="text-destructive" onClick={() => handleDeleteSequence(selectedSequence.id)}>
-                  <Trash className="h-4 w-4 mr-2" />
-                  Supprimer
-                </Button>
-              </div>
-            </CardFooter>
-          </Card>
-        ) : (
-          <Card className="h-full flex flex-col justify-center items-center p-8 text-center glass-card border border-border/50">
-            <div className="mb-4 p-3 rounded-full bg-primary/10">
-              <Sparkles className="h-8 w-8 text-primary" />
-            </div>
-            <h3 className="text-xl font-medium mb-2">Séquences automatisées</h3>
-            <p className="text-muted-foreground mb-6 max-w-md">
-              Créez des séquences d'emails automatisées pour engager vos contacts et suivre votre prospection commerciale.
-            </p>
-            <Button onClick={handleCreateSequence}>
-              <Plus className="h-4 w-4 mr-2" />
-              Créer une nouvelle séquence
-            </Button>
-          </Card>
-        )}
-      </div>
-      
-      {/* Dialogs pour l'ajout et modification d'étapes */}
-      <Dialog open={isAddingStep} onOpenChange={setIsAddingStep}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>
-              {isEditingStep ? 'Modifier l\'étape' : 'Ajouter une étape'}
-            </DialogTitle>
-            <DialogDescription>
-              {currentStep?.type === 'email' ? 'Configurez le contenu de l\'email à envoyer.' :
-               currentStep?.type === 'delay' ? 'Définissez le délai d\'attente avant la prochaine étape.' :
-               'Configurez les conditions de branchement de votre séquence.'}
-            </DialogDescription>
-          </DialogHeader>
-          
-          {currentStep && (
-            <div className="py-4">
-              <div className="grid grid-cols-1 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="step-name">Nom de l'étape</Label>
-                  <Input 
-                    id="step-name"
-                    value={currentStep.name}
-                    onChange={(e) => handleUpdateStepField('name', e.target.value)}
-                    placeholder="Nom de l'étape"
-                  />
-                </div>
-                
-                {currentStep.type === 'email' && (
-                  <div className="space-y-2">
-                    <Label htmlFor="email-template">Modèle d'email</Label>
-                    <Select 
-                      value={currentStep.templateId || ''}
-                      onValueChange={(value) => handleUpdateStepField('templateId', value)}
-                    >
-                      <SelectTrigger id="email-template">
-                        <SelectValue placeholder="Sélectionner un modèle" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {availableTemplates.map(template => (
-                          <SelectItem key={template.id} value={template.id}>
-                            {template.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-                
-                {currentStep.type === 'delay' && (
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="delay-value">Durée</Label>
-                      <Input 
-                        id="delay-value"
-                        type="number"
-                        min={1}
-                        value={currentStep.delay?.value || 1}
-                        onChange={(e) => handleUpdateStepField('delay.value', parseInt(e.target.value))}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="delay-unit">Unité</Label>
-                      <Select 
-                        value={currentStep.delay?.unit || 'days'}
-                        onValueChange={(value) => handleUpdateStepField('delay.unit', value)}
-                      >
-                        <SelectTrigger id="delay-unit">
-                          <SelectValue placeholder="Unité" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="minutes">Minutes</SelectItem>
-                          <SelectItem value="hours">Heures</SelectItem>
-                          <SelectItem value="days">Jours</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                )}
-                
-                {currentStep.type === 'condition' && (
-                  <>
-                    <div className="space-y-2">
-                      <Label htmlFor="condition-type">Type de condition</Label>
-                      <Select 
-                        value={currentStep.condition?.type || 'email_opened'}
-                        onValueChange={(value) => handleUpdateStepField('condition.type', value)}
-                      >
-                        <SelectTrigger id="condition-type">
-                          <SelectValue placeholder="Type de condition" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="email_opened">Email ouvert</SelectItem>
-                          <SelectItem value="email_clicked">Lien cliqué</SelectItem>
-                          <SelectItem value="custom">Condition personnalisée</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="condition-value">Valeur</Label>
-                      {currentStep.condition?.type === 'custom' ? (
-                        <Input
-                          id="condition-value" 
-                          value={currentStep.condition?.value || ''}
-                          onChange={(e) => handleUpdateStepField('condition.value', e.target.value)}
-                          placeholder="Condition personnalisée"
-                        />
-                      ) : (
-                        <Select 
-                          value={currentStep.condition?.value || 'true'}
-                          onValueChange={(value) => handleUpdateStepField('condition.value', value)}
-                        >
-                          <SelectTrigger id="condition-value">
-                            <SelectValue placeholder="Valeur" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="true">Oui</SelectItem>
-                            <SelectItem value="false">Non</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      )}
-                    </div>
-                    
-                    {selectedSequence && selectedSequence.steps.length > 0 && (
-                      <div className="space-y-2">
-                        <Label htmlFor="target-step">Si la condition est vraie, aller à</Label>
-                        <Select 
-                          value={currentStep.condition?.targetStepId || ''}
-                          onValueChange={(value) => handleUpdateStepField('condition.targetStepId', value)}
-                        >
-                          <SelectTrigger id="target-step">
-                            <SelectValue placeholder="Sélectionner une étape cible" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="">Continuer normalement</SelectItem>
-                            {selectedSequence.steps.map((step, index) => (
-                              <SelectItem key={step.id} value={step.id}>
-                                Étape {index + 1}: {step.name}
-                              </SelectItem>
-                            ))}
-                            <SelectItem value="end">Fin de la séquence</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-            </div>
-          )}
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddingStep(false)}>
-              Annuler
-            </Button>
-            <Button onClick={handleSaveStep}>
-              {isEditingStep ? 'Enregistrer' : 'Ajouter'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-};
-
-export default EmailSequenceBuilder;
+                        <div key

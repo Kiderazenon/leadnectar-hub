@@ -1,11 +1,20 @@
 
-import React, { useState } from 'react';
-import CampaignsList from '@/components/campaigns/CampaignsList';
+import React, { useState, lazy, Suspense } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Plus, Calendar, Mail, Clock } from 'lucide-react';
-import EmailTemplateLibrary from '@/components/campaigns/EmailTemplateLibrary';
-import EmailSequenceBuilder from '@/components/campaigns/EmailSequenceBuilder';
+import { ArrowRight, Plus, Calendar, Mail, Clock, Loader } from 'lucide-react';
+
+// Import des composants avec lazy loading
+const CampaignsList = lazy(() => import('@/components/campaigns/CampaignsList'));
+const EmailTemplateLibrary = lazy(() => import('@/components/campaigns/EmailTemplateLibrary'));
+const EmailSequenceBuilder = lazy(() => import('@/components/campaigns/EmailSequenceBuilder'));
+
+// Composant de fallback pendant le chargement
+const LoadingFallback = () => (
+  <div className="flex justify-center items-center p-12">
+    <Loader className="h-8 w-8 animate-spin text-primary" />
+  </div>
+);
 
 const Campaigns: React.FC = () => {
   const [activeTab, setActiveTab] = useState('campaigns');
@@ -24,15 +33,21 @@ const Campaigns: React.FC = () => {
         </TabsList>
         
         <TabsContent value="campaigns" className="mt-6">
-          <CampaignsList />
+          <Suspense fallback={<LoadingFallback />}>
+            <CampaignsList />
+          </Suspense>
         </TabsContent>
         
         <TabsContent value="templates" className="mt-6">
-          <EmailTemplateLibrary />
+          <Suspense fallback={<LoadingFallback />}>
+            <EmailTemplateLibrary />
+          </Suspense>
         </TabsContent>
         
         <TabsContent value="sequences" className="mt-6">
-          <EmailSequenceBuilder />
+          <Suspense fallback={<LoadingFallback />}>
+            <EmailSequenceBuilder />
+          </Suspense>
         </TabsContent>
       </Tabs>
     </div>

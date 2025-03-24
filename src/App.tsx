@@ -1,10 +1,10 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Contacts from "./pages/Contacts";
@@ -14,36 +14,12 @@ import Settings from "./pages/Settings";
 import Admin from "./pages/Admin";
 import LinkedIn from "./pages/LinkedIn";
 import NotFound from "./pages/NotFound";
-import Navbar from "./components/layout/Navbar";
-import Sidebar from "./components/layout/Sidebar";
+import Auth from "./pages/Auth";
+import AuthGuard from "./components/auth/AuthGuard";
+import { AuthProvider } from "./context/AuthContext";
+import AppLayout from "./components/layout/AppLayout";
 
 const queryClient = new QueryClient();
-
-const AppLayout = ({ children }: { children: React.ReactNode }) => {
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const location = useLocation();
-  
-  // Don't show the app layout on the landing page
-  if (location.pathname === '/') {
-    return <>{children}</>;
-  }
-  
-  return (
-    <div className="min-h-screen flex">
-      <Sidebar 
-        isCollapsed={isSidebarCollapsed} 
-        onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)} 
-      />
-      
-      <div className="flex-1 flex flex-col">
-        <Navbar onMenuToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)} />
-        <main className="flex-1 overflow-auto bg-background">
-          {children}
-        </main>
-      </div>
-    </div>
-  );
-};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -51,66 +27,84 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route 
-            path="/dashboard" 
-            element={
-              <AppLayout>
-                <Dashboard />
-              </AppLayout>
-            } 
-          />
-          <Route 
-            path="/contacts" 
-            element={
-              <AppLayout>
-                <Contacts />
-              </AppLayout>
-            } 
-          />
-          <Route 
-            path="/pipeline" 
-            element={
-              <AppLayout>
-                <Pipeline />
-              </AppLayout>
-            } 
-          />
-          <Route 
-            path="/campaigns" 
-            element={
-              <AppLayout>
-                <Campaigns />
-              </AppLayout>
-            } 
-          />
-          <Route 
-            path="/settings" 
-            element={
-              <AppLayout>
-                <Settings />
-              </AppLayout>
-            } 
-          />
-          <Route 
-            path="/admin" 
-            element={
-              <AppLayout>
-                <Admin />
-              </AppLayout>
-            } 
-          />
-          <Route 
-            path="/linkedin" 
-            element={
-              <AppLayout>
-                <LinkedIn />
-              </AppLayout>
-            } 
-          />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AuthProvider>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/auth" element={<Auth />} />
+            
+            <Route 
+              path="/dashboard" 
+              element={
+                <AuthGuard>
+                  <AppLayout>
+                    <Dashboard />
+                  </AppLayout>
+                </AuthGuard>
+              } 
+            />
+            <Route 
+              path="/contacts" 
+              element={
+                <AuthGuard>
+                  <AppLayout>
+                    <Contacts />
+                  </AppLayout>
+                </AuthGuard>
+              } 
+            />
+            <Route 
+              path="/pipeline" 
+              element={
+                <AuthGuard>
+                  <AppLayout>
+                    <Pipeline />
+                  </AppLayout>
+                </AuthGuard>
+              } 
+            />
+            <Route 
+              path="/campaigns" 
+              element={
+                <AuthGuard>
+                  <AppLayout>
+                    <Campaigns />
+                  </AppLayout>
+                </AuthGuard>
+              } 
+            />
+            <Route 
+              path="/settings" 
+              element={
+                <AuthGuard>
+                  <AppLayout>
+                    <Settings />
+                  </AppLayout>
+                </AuthGuard>
+              } 
+            />
+            <Route 
+              path="/admin" 
+              element={
+                <AuthGuard adminOnly={true}>
+                  <AppLayout>
+                    <Admin />
+                  </AppLayout>
+                </AuthGuard>
+              } 
+            />
+            <Route 
+              path="/linkedin" 
+              element={
+                <AuthGuard>
+                  <AppLayout>
+                    <LinkedIn />
+                  </AppLayout>
+                </AuthGuard>
+              } 
+            />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

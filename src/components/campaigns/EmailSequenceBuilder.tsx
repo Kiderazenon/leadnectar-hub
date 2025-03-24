@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -865,4 +866,205 @@ const EmailSequenceBuilder: React.FC<EmailSequenceBuilderProps> = ({ className }
                     
                     <div className="space-y-6">
                       {selectedSequence.steps.map((step, index) => (
-                        <div key
+                        <div key={step.id} className="border border-border/50 rounded-md p-4">
+                          <div className="flex items-center mb-3">
+                            <div className={cn(
+                              "w-6 h-6 rounded-full flex items-center justify-center mr-3 text-xs text-white",
+                              step.type === 'email' ? "bg-primary" : 
+                              step.type === 'delay' ? "bg-orange-500" :
+                              "bg-purple-500"
+                            )}>
+                              {index + 1}
+                            </div>
+                            <h4 className="text-sm font-medium flex items-center">
+                              {getStepIcon(step.type)}
+                              <span className="ml-2">{step.name}</span>
+                            </h4>
+                          </div>
+                          
+                          {step.type === 'email' && (
+                            <div className="bg-muted/20 p-4 rounded-md">
+                              <p className="text-sm mb-2 font-medium">{getTemplateNameById(step.templateId)}</p>
+                              <p className="text-xs text-muted-foreground">
+                                Contenu de l'email personnalisé pour le destinataire...
+                              </p>
+                            </div>
+                          )}
+                          
+                          {step.type === 'delay' && (
+                            <div className="flex items-center">
+                              <Clock className="h-4 w-4 mr-2 text-orange-500" />
+                              <span className="text-sm">{formatDelayText(step.delay)} d'attente</span>
+                            </div>
+                          )}
+                          
+                          {step.type === 'condition' && (
+                            <div className="flex items-center">
+                              <Settings className="h-4 w-4 mr-2 text-purple-500" />
+                              <span className="text-sm">{formatConditionText(step.condition)}</span>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="h-full flex items-center justify-center border border-dashed border-border/50 rounded-md p-8">
+            <div className="text-center">
+              <div className="mb-4 p-3 rounded-full bg-primary/10 inline-block">
+                <Mail className="h-6 w-6 text-primary" />
+              </div>
+              <h3 className="text-lg font-medium mb-2">Aucune séquence sélectionnée</h3>
+              <p className="text-muted-foreground mb-4">
+                Sélectionnez une séquence existante ou créez-en une nouvelle.
+              </p>
+              <Button onClick={handleCreateSequence}>
+                <Plus className="h-4 w-4 mr-1" />
+                Créer une séquence
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+      
+      {/* Dialogue pour l'ajout/édition d'étape */}
+      <Dialog open={isAddingStep} onOpenChange={(open) => !open && setIsAddingStep(false)}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{isEditingStep ? 'Modifier une étape' : 'Ajouter une étape'}</DialogTitle>
+            <DialogDescription>
+              {currentStep?.type === 'email' ? 'Configurer un email de la séquence' :
+               currentStep?.type === 'delay' ? 'Configurer un délai entre deux étapes' :
+               'Configurer une condition pour diriger le flux de la séquence'}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {currentStep && (
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="step-name">Nom de l'étape</Label>
+                <Input 
+                  id="step-name"
+                  value={currentStep.name}
+                  onChange={(e) => handleUpdateStepField('name', e.target.value)}
+                />
+              </div>
+              
+              {currentStep.type === 'email' && (
+                <div>
+                  <Label htmlFor="email-template">Modèle d'email</Label>
+                  <Select 
+                    value={currentStep.templateId || ''}
+                    onValueChange={(value) => handleUpdateStepField('templateId', value)}
+                  >
+                    <SelectTrigger id="email-template">
+                      <SelectValue placeholder="Sélectionner un modèle" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableTemplates.map(template => (
+                        <SelectItem key={template.id} value={template.id}>
+                          {template.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              
+              {currentStep.type === 'delay' && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="delay-value">Durée</Label>
+                    <Input 
+                      id="delay-value"
+                      type="number"
+                      min={1}
+                      value={currentStep.delay?.value || 1}
+                      onChange={(e) => handleUpdateStepField('delay.value', parseInt(e.target.value))}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="delay-unit">Unité</Label>
+                    <Select 
+                      value={currentStep.delay?.unit || 'days'}
+                      onValueChange={(value) => handleUpdateStepField('delay.unit', value)}
+                    >
+                      <SelectTrigger id="delay-unit">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="minutes">Minutes</SelectItem>
+                        <SelectItem value="hours">Heures</SelectItem>
+                        <SelectItem value="days">Jours</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              )}
+              
+              {currentStep.type === 'condition' && (
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="condition-type">Type de condition</Label>
+                    <Select 
+                      value={currentStep.condition?.type || 'email_opened'}
+                      onValueChange={(value) => handleUpdateStepField('condition.type', value)}
+                    >
+                      <SelectTrigger id="condition-type">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="email_opened">Email ouvert</SelectItem>
+                        <SelectItem value="email_clicked">Lien cliqué</SelectItem>
+                        <SelectItem value="custom">Condition personnalisée</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  {currentStep.condition?.type === 'custom' ? (
+                    <div>
+                      <Label htmlFor="condition-custom">Condition personnalisée</Label>
+                      <Textarea 
+                        id="condition-custom"
+                        value={currentStep.condition?.value || ''}
+                        onChange={(e) => handleUpdateStepField('condition.value', e.target.value)}
+                        placeholder="Entrez votre condition personnalisée"
+                      />
+                    </div>
+                  ) : (
+                    <div>
+                      <Label htmlFor="condition-value">Valeur</Label>
+                      <Select 
+                        value={currentStep.condition?.value || 'true'}
+                        onValueChange={(value) => handleUpdateStepField('condition.value', value)}
+                      >
+                        <SelectTrigger id="condition-value">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="true">Oui</SelectItem>
+                          <SelectItem value="false">Non</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAddingStep(false)}>Annuler</Button>
+            <Button onClick={handleSaveStep}>Enregistrer</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+export default EmailSequenceBuilder;

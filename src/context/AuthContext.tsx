@@ -37,6 +37,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Fonction pour charger le profil utilisateur
   const loadUserProfile = async (userId: string) => {
     try {
+      console.log("Chargement du profil utilisateur pour:", userId);
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -48,6 +49,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return null;
       }
 
+      console.log("Profil utilisateur chargé:", data);
       setProfile(data as Profile);
       setIsAdmin(data?.role === 'admin');
       return data as Profile;
@@ -58,14 +60,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    // Configurer l'écouteur d'état d'authentification
+    console.log("AuthProvider initialized");
+    
+    // Configurer l'écouteur d'état d'authentification en PREMIER
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
+      async (event, sessionData) => {
+        console.log("Auth state changed:", event, sessionData?.user?.id);
         
-        if (session?.user) {
-          await loadUserProfile(session.user.id);
+        setSession(sessionData);
+        setUser(sessionData?.user ?? null);
+        
+        if (sessionData?.user) {
+          await loadUserProfile(sessionData.user.id);
         } else {
           setProfile(null);
           setIsAdmin(false);
@@ -75,24 +81,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     );
 
-    // Vérifier s'il y a une session existante
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        loadUserProfile(session.user.id);
+    // ENSUITE vérifier s'il y a une session existante
+    const checkExistingSession = async () => {
+      try {
+        console.log("Checking existing session");
+        const { data: { session: existingSession } } = await supabase.auth.getSession();
+        
+        console.log("Existing session:", existingSession?.user?.id);
+        
+        setSession(existingSession);
+        setUser(existingSession?.user ?? null);
+        
+        if (existingSession?.user) {
+          await loadUserProfile(existingSession.user.id);
+        }
+        
+        setLoading(false);
+      } catch (error) {
+        console.error("Error checking session:", error);
+        setLoading(false);
       }
-      
-      setLoading(false);
-    });
+    };
+    
+    checkExistingSession();
 
     // Nettoyer l'écouteur
-    return () => subscription.unsubscribe();
+    return () => {
+      console.log("Cleaning up auth subscription");
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
     try {
+      setLoading(true);
+      console.log("Tentative de connexion:", email);
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -103,18 +127,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       if (data.user) {
+        console.log("Connexion réussie pour:", data.user.id);
         await loadUserProfile(data.user.id);
         navigate('/dashboard');
         toast.success('Connexion réussie');
       }
     } catch (error: any) {
+      console.error("Erreur de connexion:", error.message);
       toast.error(error.message || 'Erreur lors de la connexion');
       throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
   const signUp = async (email: string, password: string, firstname: string, lastname: string) => {
     try {
+      setLoading(true);
+      console.log("Tentative d'inscription:", email);
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -130,23 +161,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw error;
       }
 
+      console.log("Inscription réussie");
       toast.success('Compte créé avec succès. Veuillez vous connecter.');
       navigate('/auth');
     } catch (error: any) {
+      console.error("Erreur d'inscription:", error.message);
       toast.error(error.message || 'Erreur lors de la création du compte');
       throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
   const signOut = async () => {
     try {
+      setLoading(true);
+      console.log("Tentative de déconnexion");
+      
       await supabase.auth.signOut();
       setProfile(null);
       setIsAdmin(false);
+      setUser(null);
+      setSession(null);
+      
+      console.log("Déconnexion réussie");
       navigate('/auth');
       toast.success('Déconnexion réussie');
     } catch (error: any) {
+      console.error("Erreur de déconnexion:", error.message);
       toast.error(error.message || 'Erreur lors de la déconnexion');
+    } finally {
+      setLoading(false);
     }
   };
 

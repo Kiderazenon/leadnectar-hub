@@ -1,14 +1,20 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ContactsList from '@/components/contacts/ContactsList';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Grid3X3, List, UserPlus } from 'lucide-react';
 import AddContactDialog from '@/components/contacts/AddContactDialog';
+import { useAuth } from '@/context/AuthContext';
 
 const Contacts: React.FC = () => {
   const [view, setView] = useState<'list' | 'grid'>('list');
   const [activeTab, setActiveTab] = useState('all');
+  const { user } = useAuth();
+  
+  useEffect(() => {
+    console.log("Contacts page mounted, authenticated user:", !!user);
+  }, [user]);
   
   return (
     <div className="p-6 max-w-7xl mx-auto animate-fade-in">
@@ -61,7 +67,7 @@ const Contacts: React.FC = () => {
       </Tabs>
       
       {view === 'list' ? (
-        <ContactsList />
+        <ContactsList filter={activeTab} />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <AddContactDialog 

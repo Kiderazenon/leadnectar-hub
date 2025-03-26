@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Search, 
@@ -50,13 +49,16 @@ const statusColors = {
   churned: 'bg-red-500/10 text-red-600'
 };
 
-const ContactsList: React.FC = () => {
+interface ContactsListProps {
+  statusFilter?: string;
+}
+
+const ContactsList: React.FC<ContactsListProps> = ({ statusFilter = 'all' }) => {
   const { user } = useAuth();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [selectedContacts, setSelectedContacts] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState('all');
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -128,7 +130,9 @@ const ContactsList: React.FC = () => {
   };
   
   const handleStatusFilterChange = (value: string) => {
-    setStatusFilter(value);
+    // Ne plus nécessaire de stocker localement le filtre ici car il est passé par les props
+    // On garde néanmoins cette fonction pour le bouton d'application du filtre
+    fetchContacts();
   };
   
   const deleteContact = async (id: string) => {

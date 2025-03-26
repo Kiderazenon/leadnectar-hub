@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 
@@ -10,6 +10,9 @@ const Index: React.FC = () => {
   
   // Éviter les boucles infinies en s'assurant que l'état d'authentification est chargé
   useEffect(() => {
+    // Configurer le titre de la page
+    document.title = "LeadNectar - CRM Marketing Multicanal";
+    
     // Simuler un temps de chargement court pour assurer que le contexte d'authentification est prêt
     const timer = setTimeout(() => {
       setIsLoading(false);

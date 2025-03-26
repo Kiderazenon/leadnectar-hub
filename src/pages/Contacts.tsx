@@ -14,6 +14,7 @@ const Contacts: React.FC = () => {
   
   useEffect(() => {
     console.log("Contacts page mounted, authenticated user:", !!user);
+    document.title = "Contacts | LeadNectar";
   }, [user]);
   
   return (

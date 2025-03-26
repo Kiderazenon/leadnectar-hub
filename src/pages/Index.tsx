@@ -1,11 +1,36 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 
 const Index: React.FC = () => {
   const { user } = useAuth();
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Éviter les boucles infinies en s'assurant que l'état d'authentification est chargé
+  useEffect(() => {
+    // Simuler un temps de chargement court pour assurer que le contexte d'authentification est prêt
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, []);
+  
+  // Afficher un indicateur de chargement pendant l'initialisation
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-pulse flex flex-col items-center">
+          <div className="text-2xl font-bold mb-2">
+            Lead<span className="text-primary">Nectar</span>
+          </div>
+          <p className="text-muted-foreground">Chargement en cours...</p>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -73,7 +98,7 @@ const Index: React.FC = () => {
       
       <footer className="border-t border-border/50 py-8">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          <p>&copy; 2023 LeadNectar. Tous droits réservés.</p>
+          <p>&copy; {new Date().getFullYear()} LeadNectar. Tous droits réservés.</p>
         </div>
       </footer>
     </div>

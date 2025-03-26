@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Search, 
   Filter, 
@@ -39,7 +39,9 @@ import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { Contact } from '@/types/contact';
 import AddContactDialog from './AddContactDialog';
+import ContactDetailDialog from './ContactDetailDialog';
 import { toast } from 'sonner';
+import { useAuth } from '@/context/AuthContext';
 
 const statusColors = {
   lead: 'bg-blue-500/10 text-blue-600',
@@ -49,19 +51,29 @@ const statusColors = {
 };
 
 const ContactsList: React.FC = () => {
+  const { user } = useAuth();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [selectedContacts, setSelectedContacts] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('all');
+  const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
-  useEffect(() => {
-    fetchContacts();
-  }, []);
-  
-  const fetchContacts = async () => {
+  // Utiliser useCallback pour éviter de recréer cette fonction à chaque rendu
+  const fetchContacts = useCallback(async () => {
+    if (!user) {
+      console.log('Aucun utilisateur connecté, impossible de charger les contacts');
+      setLoading(false);
+      return;
+    }
+    
     try {
       setLoading(true);
+      setError(null);
+      
+      console.log('Chargement des contacts avec filtre de statut:', statusFilter);
       
       let query = supabase
         .from('contacts')
@@ -73,16 +85,31 @@ const ContactsList: React.FC = () => {
       
       const { data, error } = await query.order('created_at', { ascending: false });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Erreur Supabase lors du chargement des contacts:', error);
+        setError(`Erreur lors du chargement des contacts: ${error.message}`);
+        toast.error('Erreur lors du chargement des contacts');
+        return;
+      }
       
-      setContacts(data as Contact[]);
+      console.log(`${data?.length || 0} contacts chargés avec succès`);
+      setContacts(data as Contact[] || []);
     } catch (error: any) {
-      console.error('Erreur lors du chargement des contacts:', error);
+      console.error('Exception lors du chargement des contacts:', error);
+      setError(`Exception: ${error.message}`);
       toast.error('Erreur lors du chargement des contacts');
     } finally {
       setLoading(false);
     }
-  };
+  }, [statusFilter, user]);
+  
+  useEffect(() => {
+    // Éviter les appels inutiles si l'utilisateur n'est pas connecté
+    if (user) {
+      console.log('useEffect: Chargement des contacts');
+      fetchContacts();
+    }
+  }, [fetchContacts, user]);
   
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -102,9 +129,6 @@ const ContactsList: React.FC = () => {
   
   const handleStatusFilterChange = (value: string) => {
     setStatusFilter(value);
-    setTimeout(() => {
-      fetchContacts();
-    }, 100);
   };
   
   const deleteContact = async (id: string) => {
@@ -114,27 +138,59 @@ const ContactsList: React.FC = () => {
         .delete()
         .eq('id', id);
         
-      if (error) throw error;
+      if (error) {
+        console.error('Erreur lors de la suppression du contact:', error);
+        toast.error(`Erreur lors de la suppression: ${error.message}`);
+        return;
+      }
       
       setContacts(prev => prev.filter(contact => contact.id !== id));
       setSelectedContacts(prev => prev.filter(contactId => contactId !== id));
       toast.success('Contact supprimé avec succès');
     } catch (error: any) {
-      console.error('Erreur lors de la suppression du contact:', error);
+      console.error('Exception lors de la suppression:', error);
       toast.error('Erreur lors de la suppression du contact');
     }
+  };
+  
+  const handleViewContact = (contact: Contact) => {
+    setSelectedContact(contact);
+    setDetailDialogOpen(true);
   };
   
   const handleAddContact = () => {
     fetchContacts();
   };
   
-  const filteredContacts = contacts.filter(contact => 
-    (contact.first_name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-    (contact.last_name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-    (contact.email?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-    (contact.company_name?.toLowerCase() || '').includes(searchTerm.toLowerCase())
-  );
+  const applyFilters = () => {
+    fetchContacts();
+  };
+  
+  // Filter contacts based on search term
+  const filteredContacts = contacts.filter(contact => {
+    const firstNameMatch = (contact.first_name?.toLowerCase() || '').includes(searchTerm.toLowerCase());
+    const lastNameMatch = (contact.last_name?.toLowerCase() || '').includes(searchTerm.toLowerCase());
+    const emailMatch = (contact.email?.toLowerCase() || '').includes(searchTerm.toLowerCase());
+    const companyMatch = (contact.company_name?.toLowerCase() || '').includes(searchTerm.toLowerCase());
+    
+    return firstNameMatch || lastNameMatch || emailMatch || companyMatch;
+  });
+  
+  if (error) {
+    return (
+      <div className="p-8 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+        <h3 className="text-lg font-medium text-red-800 dark:text-red-200">Erreur de chargement</h3>
+        <p className="mt-2 text-red-700 dark:text-red-300">{error}</p>
+        <Button 
+          variant="outline" 
+          className="mt-4"
+          onClick={() => fetchContacts()}
+        >
+          Réessayer
+        </Button>
+      </div>
+    );
+  }
   
   return (
     <div className="space-y-4 animate-scale-in">
@@ -177,7 +233,7 @@ const ContactsList: React.FC = () => {
               </div>
               <DropdownMenuSeparator />
               <div className="px-2 py-1.5">
-                <Button className="w-full" onClick={fetchContacts}>Appliquer</Button>
+                <Button className="w-full" onClick={applyFilters}>Appliquer</Button>
               </div>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -247,7 +303,10 @@ const ContactsList: React.FC = () => {
               ) : filteredContacts.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
-                    Aucun contact trouvé
+                    {searchTerm 
+                      ? 'Aucun contact ne correspond à votre recherche'
+                      : 'Aucun contact trouvé. Commencez par ajouter un contact.'
+                    }
                   </td>
                 </tr>
               ) : (
@@ -271,8 +330,8 @@ const ContactsList: React.FC = () => {
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <div className="font-medium">{`${contact.first_name} ${contact.last_name}`}</div>
-                          <div className="text-sm text-muted-foreground">{contact.email}</div>
+                          <div className="font-medium">{`${contact.first_name || ''} ${contact.last_name || ''}`}</div>
+                          <div className="text-sm text-muted-foreground">{contact.email || '-'}</div>
                         </div>
                       </div>
                     </td>
@@ -285,7 +344,7 @@ const ContactsList: React.FC = () => {
                     <td className="px-4 py-3">
                       <Badge variant="outline" className={cn(
                         "rounded-full font-normal",
-                        statusColors[contact.status]
+                        statusColors[contact.status as keyof typeof statusColors]
                       )}>
                         {contact.status === 'lead' ? 'Lead' : 
                          contact.status === 'qualified' ? 'Qualifié' : 
@@ -333,7 +392,10 @@ const ContactsList: React.FC = () => {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-40">
-                            <DropdownMenuItem className="cursor-pointer flex items-center">
+                            <DropdownMenuItem 
+                              className="cursor-pointer flex items-center"
+                              onClick={() => handleViewContact(contact)}
+                            >
                               <Eye className="h-4 w-4 mr-2" />
                               <span>Voir</span>
                             </DropdownMenuItem>
@@ -360,6 +422,12 @@ const ContactsList: React.FC = () => {
           </table>
         </div>
       </div>
+      
+      <ContactDetailDialog
+        contact={selectedContact}
+        open={detailDialogOpen}
+        onOpenChange={setDetailDialogOpen}
+      />
     </div>
   );
 };

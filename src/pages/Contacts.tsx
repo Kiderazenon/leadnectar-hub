@@ -1,7 +1,6 @@
 
 import React, { useState } from 'react';
 import ContactsList from '@/components/contacts/ContactsList';
-import ContactCard from '@/components/contacts/ContactCard';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Grid3X3, List, UserPlus } from 'lucide-react';

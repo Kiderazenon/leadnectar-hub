@@ -1,0 +1,31 @@
+name: Mark stale issues and pull requests
+
+on:
+  schedule:
+    - cron: '24 22 * * *'
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/stale@v5
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          days-before-stale: 30
+          days-before-close: 7
+          stale-issue-message: >
+            🔔 Cette issue est inactive depuis 30 jours. Si aucune activité n’est enregistrée, elle sera fermée automatiquement dans 7 jours.
+            Merci de commenter pour la garder ouverte !
+          stale-pr-message: >
+            🔔 Cette PR est inactive depuis 30 jours. Si aucune mise à jour n’est faite, elle sera fermée automatiquement dans 7 jours.
+            Merci d’ajouter un commentaire ou de la mettre à jour si elle est toujours d’actualité.
+          stale-issue-label: 'no-issue-activity'
+          stale-pr-label: 'no-pr-activity'
+          exempt-issue-labels: 'important, awaiting-feedback'
+          exempt-pr-labels: 'work-in-progress'
+          debug-only: false
+
